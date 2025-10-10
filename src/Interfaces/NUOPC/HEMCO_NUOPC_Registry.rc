@@ -1,0 +1,93 @@
+#
+# This the HEMCO NUOPC Grid Component Registry. It defines Import,
+# Internal and Export states for this component as well as
+# any
+#
+# !REVISION HISTORY:
+#  09Oct2025  HEMCO Dev    First Version for NUOPC
+# -----------------------------------------------------------------
+
+  COMP_NAME: HEMCO_NUOPC
+
+# Only change the Registry version when major structural changes
+# occurs, not changes in content
+# --------------------------------------------------------------
+  NUOPC_REGISTRY_VERSION: 1.00
+
+#				------------
+#				Import State
+#				------------
+<ImportSpec name="HEMCO_NUOPC", cols="standardname,short_name,units,dims,vlocation,stat,refresh_interval,averaging_interval,num_subtiles,default,norestart,long_name">
+# -------------------|-------------------|-------------|-----|---|----|---|---|-----|------|----|--------------------------
+#  Standard          |  	            |	           |	 | V |Item|Intervl| Sub | Def  | No |	Long
+#  Name 	      | Short Name       |   Units    | Dim |Loc|Type| R | A |Tiles| ault | Rst|	Name
+# -------------------|-------------------|-------------|-----|---|----|---|---|-----|------|----|--------------------------
+# Meteorological fields commonly used by HEMCO extensions
+  "eastward_wind_at_10m"                | U10M          | m s-1       | xy  |   |    |   |   |     |0.0   |    | 10-meter_eastward_wind
+  "northward_wind_at_10m"               | V10M          | m s-1       | xy  |   |    |   |   |     |0.0   |    | 10-meter_northward_wind
+  "surface_albedo_for_visible_diffuse"  | ALBVF         | 1           | xy  |   |    |   |   |     |0.2   |    | surface_albedo_for_visible_diffuse
+  "air_temperature_at_2m"               | T2M           | K           | xy  |   |    |   |   |     |28.0 |    | 2-meter_air_temperature
+  "surface_skin_temperature"            | TS            | K           | xy  |   |    |   |   |     |288.0 |    | surface_skin_temperature
+  "surface_soil_wetness"                | WET1          | 1           | xy  |   |    |   |   |     |0.5   |    | surface_soil_wetness
+  "root_soil_wetness"                   | WET2          | 1           | xy  |   |    |   |   |     |0.5   |    | root_soil_wetness
+  "snow_mass"                           | SNOMAS        | kg m-2      | xy  |   |    |   |   |     |0.0   |    | snow_mass
+  "snow_depth"                          | SNOWDP        | m           | xy  |   |    |   |   |     |0.0   |    | snow_depth
+  "surface_velocity_scale"              | USTAR         | m s-1       | xy  |   |    |   |   |     |0.1   |    | surface_velocity_scale
+  "surface_roughness"                   | Z0H           | m           | xy  |   |    |   |   |     |0.1   |    | surface_roughness
+  "tropopause_pressure_based_on_blended_estimate" | TROPP   | Pa          | xy  |   |    |   |   |     |10000.0|  | tropopause_pressure_based_on_blended_estimate
+  "surface_downwelling_par_beam_flux"   | DRPAR         | W m-2       | xy  |   |    |   |   |     |0.0   |    | surface_downwelling_par_beam_flux
+  "surface_downwelling_par_diffuse_flux"| DFPAR         | W m-2       | xy  |   |    |   |   |     |0.0   |    | surface_downwelling_par_diffuse_flux
+  "surface_net_downward_shortwave_flux" | SWNDSRF       | W m-2       | xy  |   |    |   |   |     |0.0   |    | surface_net_downward_shortwave_flux
+  "fraction_of_land"                    | FRLAND        | 1           | xy  |   |    |   |   |     |0.5   |    | fraction_of_land
+  "fraction_of_ocean"                   | FROCEAN       | 1           | xy  |   |    |   |   |     |0.5   |    | fraction_of_ocean
+  "fraction_of_lake"                    | FRLAKE        | 1           | xy  |   |    |   |   |     |0.0   |    | fraction_of_lake
+  "fraction_of_land_ice"                | FRLANDICE     | 1           | xy  |   |    |   |   |     |0.0   |    | fraction_of_land_ice
+  "total_cloud_area_fraction"           | CLDTT         | 1           | xy  |   |    |   |   |     |0.0   |    | total_cloud_area_fraction
+  "leaf_area_index"                     | LAI           | 1           | xy  |   |    |   |   |     |1.0   |    | leaf_area_index
+  "cumulative_mass_flux"                | CNV_MFC       | kg/m2/s     | xyv | E |    |   |   |     |0.0   |    | cumulative_mass_flux
+  "specific_humidity"                   | Q             | kg/kg       | xyv | C |    |   |   |     |0.01  |    | specific_humidity
+  "air_pressure_layer_interfaces"       | PLE           | Pa          | xyv | E |    |   |   |     |101325.0-(v-1)*10000.0 | | air_pressure_layer_interfaces
+  "geopotential_height"                 | ZLE           | m           | xyv | E |    |   |   |     |0.0   |    | geopotential_height
+  "air_density"                         | AIRDENS       | kg m-3      | xyv | C |    |   |   |     |1.2   |    | air_density
+  "surface_pressure"                    | PS            | Pa          | xy  |   |    |   |   |     |101325.0|  | surface_pressure
+  "grid_cell_area"                      | AREA          | m2          | xy  |   |    |   |   |     |1.0e6 |    | grid_cell_area
+# -------------------|-------------------|-------------|-----|---|----|---|---|-----|------|----|--------------------------
+</ImportSpec>
+
+#				------------
+#				Export State
+#				------------
+
+<ExportSpec name="HEMCO_NUOPC", cols="standardname,short_name,units,dims,vlocation,long_name">
+# --------------------------------|------------------|----------------|-----|---|---------------------------------
+#  Standard                       |  Short	         |		   |     | V |	     Long
+#  Name 	                  |  Name 	      |   Units	   | Dim |Loc|	     Name
+# --------------------------------|------------------|----------------|-----|---|---------------------------------
+# Emissions will be exported based on HEMCO diagnostics configuration
+# These will be dynamically added during runtime based on configuration
+# --------------------------------|------------------|----------------|-----|---|---------------------------------
+</ExportSpec>
+
+#                               --------------
+#                               Internal State
+#                               --------------
+#
+# Note: 1) For friendlies, use "D" for dynamics, "T" for turbulence, "C" for convection, "E" for emission, S=self (adds to export); leave blank otherwise
+#       2) If quantity requires no restart, put an 'x' in the No Rst column
+#       3) RO = Alkoxy radical, RO2 = Organic peroxy radical
+<InternalSpec name="HEMCO_NUOPC", cols="standardname,short_name,units,dims,vlocation,stat,refresh_interval,averaging_interval,num_subtiles,default,norestart,halowidth,friendlyto,long_name">
+# --------------|------------|------------|-----|---|----|---|---|-----|------|----|----|---------|---------------------------------
+#  Standard     | Short      |            |     | V |Item|Intervl| Sub | Def  | No | Ha | Friends |            Long
+#  Name         | Name       |   Units    | Dim |Loc|Type| R | A |Tiles| ault | Rst| lo |         |            Name
+# --------------|------------|------------|-----|---|----|---|---|-----|------|----|----|---------|---------------------------------
+  "soilnox_pfactor_restart"              | PFACTOR       | 1          | xy  |   |    |   |   |     |1.0   |    |    | S       | soilnox_pfactor_restart 
+  "soilnox_dryperiod_restart"            | DRYPERIOD     | 1          | xy  |   |    |   |   |     |0.0   |    |    | S       | soilnox_dryperiod_restart
+  "soilnox_gwet_prev_restart"            | GWET_PREV     | 1          | xy  |   |    |   |   |     |0.0   |    |    | S       | soilnox_gwet_prev_restart
+  "soilnox_dep_reservoir_restart"        | DEP_RESERVOIR | kg m-3     | xy  |   |    |   |   |     |1e-4  |    |    | S       | soilnox_dep_reservoir_restart
+  "megan_t_davg_restart"                 | T_DAVG        |   1        | xy  |   |    |   |   |     |273.1 |    |    | S       | megan_t_davg_restart
+  "megan_t_prevday_restart"              | T_PREVDAY     |   1        | xy  |   |    |   |   |     |273.1 |    |    | S       | megan_t_prevday_restart
+  "megan_lai_prevday_restart"            | LAI_PREVDAY   |   1        | xy  |   |    |   |   |     |0.0   |    |    | S       | megan_lai_prevday_restart
+  "megan_pardr_davg_restart"             | PARDR_DAVG    |   W/m2     | xy  |   |    |   |   |     |0.0   |    |    | S       | megan_pardr_davg_restart
+  "megan_pardf_davg_restart"             | PARDF_DAVG    |   W/m2     | xy  |   |    |   |   |     |0.0   |    |    | S       | megan_pardf_davg_restart
+# --------------|------------|------------|-----|---|----|---|---|-----|------|----|----|---------|---------------------------------
+</InternalSpec>

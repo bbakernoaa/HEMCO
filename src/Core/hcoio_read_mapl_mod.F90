@@ -1,5 +1,5 @@
 !BOC
-#if defined ( ESMF_ )
+#if defined ( MAPL_ESMF )
 ! The 'standard' HEMCO I/O module is used for:
 ! - GEOS-Chem High Performance / GCHP and GEOS (ESMF_)
 !EOC

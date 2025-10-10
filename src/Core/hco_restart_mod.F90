@@ -74,8 +74,8 @@ MODULE HCO_RESTART_MOD
 !
 ! !PRIVATE MEMBER FUNCTIONS:
 !
-#if defined(ESMF_)
-  PRIVATE :: HCO_CopyFromIntnal_ESMF
+#if defined(MAPL_ESMF)
+   PRIVATE :: HCO_CopyFromIntnal_ESMF
 #endif
 
   INTERFACE HCO_RestartDefine
@@ -726,7 +726,7 @@ CONTAINS
 
   END SUBROUTINE HCO_RestartWrite_2D
 !EOC
-#if defined(ESMF_)
+#if defined(MAPL_ESMF)
 !------------------------------------------------------------------------------
 !                   Harmonized Emissions Component (HEMCO)                    !
 !------------------------------------------------------------------------------
@@ -746,11 +746,11 @@ CONTAINS
 ! !USES:
 !
 #include "MAPL_Generic.h"
-    USE ESMF
-    USE ESMFL_MOD
-    USE MAPL_GenericMod
-    USE MAPL_ErrorHandlingMod
-    USE HCO_STATE_MOD,   ONLY : Hco_State
+     USE ESMF
+     USE ESMFL_MOD
+     USE MAPL_GenericMod
+     USE MAPL_ErrorHandlingMod
+     USE HCO_STATE_MOD,   ONLY : Hco_State
 !
 ! !ARGUMENTS:
 !

@@ -1,0 +1,121 @@
+#===============================================================
+# Resource file for the Harmonized Emissions Component (HEMCO) 
+# NUOPC Interface
+#===============================================================
+
+         #############################
+         # Number of instances?
+         #############################
+
+HEMCO_Instances: 1
+
+         ###############################
+         # Configuration files for every
+         # instance 
+         ###############################
+
+HEMCO_CONFIG--001: HEMCO_Config.rc
+HEMCO_CONFIG--002: HEMCOgocart_Config.rc
+HEMCO_CONFIG--003: HEMCOgmi_Config.rc
+
+         ###############################
+         # NUOPC-specific parameters
+         ###############################
+
+# Time step for emissions (seconds)
+RUN_DT: 3600
+
+# Verbosity level
+HCO_VERBOSE: 1
+
+# Enable ESMF integration
+HCO_ESMF_INTEGRATION: 1
+
+# Enable regridding
+HCO_REGRIDDING_ENABLED: 1
+
+# Regridding method (1=bilinear, 2=conservative, 3=nearest neighbor)
+HCO_REGRID_METHOD: 1
+
+# Enable data caching
+HCO_DATA_CACHING: 1
+
+# Cache size limit (GB)
+HCO_CACHE_SIZE_LIMIT: 1.0
+
+# Enable performance timing
+HCO_PERFORMANCE_TIMING: 0
+
+# Number of threads for parallel operations
+HCO_NUM_THREADS: 1
+
+         ###############################
+         # Import/Export specifications
+         ###############################
+
+# Import fields required by HEMCO extensions
+IMPORT_U10M: 1
+IMPORT_V10M: 1
+IMPORT_T2M: 1
+IMPORT_TS: 1
+IMPORT_Q: 1
+IMPORT_PS: 1
+IMPORT_PLE: 1
+IMPORT_ZLE: 1
+IMPORT_AREA: 1
+IMPORT_AIRDENS: 1
+IMPORT_FRLAND: 1
+IMPORT_FROCEAN: 1
+IMPORT_FRLAKE: 1
+IMPORT_FRLANDICE: 1
+IMPORT_LAI: 1
+IMPORT_ALBVF: 1
+IMPORT_WET1: 1
+IMPORT_WET2: 1
+IMPORT_SNOMAS: 1
+IMPORT_SNOWDP: 1
+IMPORT_USTAR: 1
+IMPORT_Z0H: 1
+IMPORT_TROPP: 1
+IMPORT_DRPAR: 1
+IMPORT_DFPAR: 1
+IMPORT_SWNDSRF: 1
+IMPORT_CLDTT: 1
+IMPORT_CNV_MFC: 1
+
+# Export emissions fields (defined dynamically by HEMCO diagnostics)
+EXPORT_EMIS_FIELDS: 1
+
+         ###############################
+         # Grid specifications
+         ###############################
+
+# Grid type (1=lat-lon, 2=cube sphere, 3=regional)
+HCO_GRID_TYPE: 1
+
+# Grid resolution
+HCO_GRID_NX: 0    # Will be determined from host grid
+HCO_GRID_NY: 0    # Will be determined from host grid
+HCO_GRID_NZ: 0    # Will be determined from host grid
+
+# Enable grid stretching (for stretched grids)
+HCO_GRID_STRETCH: 0
+HCO_GRID_CENTRAL_LON: 0.0
+HCO_GRID_CENTRAL_LAT: 0.0
+HCO_GRID_STRETCH_FACTOR: 1.0
+
+         ###############################
+         # ESMF-specific parameters
+         ###############################
+
+# ESMF regridding options
+ESMF_REGRID_PASSES: 1
+ESMF_REGRID_SEQUENCE: 1
+ESMF_REGRID_MATRIX_TYPE: 1
+ESMF_REGRID_EXTRAP_METHOD: 0
+ESMF_REGRID_EXTRAP_NUM_LEVELS: 0
+ESMF_REGRID_EXTRAP_SEND_BOUNDS: 0
+
+# ESMF performance options
+ESMF_VM_COMP_CLOCK: 1
+ESMF_CLOCK_INTERNAL: 1

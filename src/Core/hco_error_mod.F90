@@ -183,10 +183,9 @@ CONTAINS
 !
 ! !USES:
 !
-#if defined( ESMF_ )
-#include "MAPL_Generic.h"
-    USE ESMF
-    USE MAPLBase_Mod
+#if defined( MAPL_ESMF )
+     USE ESMF
+     USE MAPLBase_Mod
 #endif
 !
 ! !INPUT PARAMETERS:

@@ -327,7 +327,7 @@ if(HEMCO_EXTERNAL_CONFIG AND MAPL_ESMF)
         INTERFACE $<LINK_ONLY:MAPL.base>
         INTERFACE $<LINK_ONLY:MAPL.generic>
     )
-    target_include_directories(HEMCOBuildProperties 
+    target_include_directories(HEMCOBuildProperties
         INTERFACE $<TARGET_PROPERTY:MAPL.base,INTERFACE_INCLUDE_DIRECTORIES>
         INTERFACE $<TARGET_PROPERTY:MAPL.generic,INTERFACE_INCLUDE_DIRECTORIES>
     )
@@ -338,6 +338,49 @@ if(HEMCO_EXTERNAL_CONFIG AND MAPL_ESMF)
     # Specify the HEMCO interface being used
     set(HEMCO_INTERFACE
         mapl
+        CACHE STRING "HEMCO interface type (used to choose appropriate I/O option)"
+    )
+endif()
+
+#-----------------------------------------------------------------------------
+# For HEMCO as submodule in NUOPC/ESMF superproject
+#-----------------------------------------------------------------------------
+if(HEMCO_EXTERNAL_CONFIG AND NUOPC_ESMF)
+    find_package(ESMF REQUIRED)
+    target_link_libraries(HEMCOBuildProperties
+        INTERFACE $<LINK_ONLY:ESMF>
+    )
+    target_include_directories(HEMCOBuildProperties
+        INTERFACE ${ESMF_INCLUDE_DIRS}
+    )
+    target_compile_definitions(HEMCOBuildProperties
+        INTERFACE ESMF_ NUOPC_ESMF
+    )
+
+    # Specify the HEMCO interface being used
+    set(HEMCO_INTERFACE
+        nuopc
+        CACHE STRING "HEMCO interface type (used to choose appropriate I/O option)"
+    )
+endif()
+
+# Also add NUOPC interface build option for standalone builds
+option(BUILD_NUOPC_INTERFACE "Build NUOPC interface for HEMCO" OFF)
+if(BUILD_NUOPC_INTERFACE)
+    find_package(ESMF REQUIRED)
+    target_link_libraries(HEMCOBuildProperties
+        INTERFACE $<LINK_ONLY:ESMF>
+    )
+    target_include_directories(HEMCOBuildProperties
+        INTERFACE ${ESMF_INCLUDE_DIRS}
+    )
+    target_compile_definitions(HEMCOBuildProperties
+        INTERFACE ESMF_
+    )
+
+    # Set HEMCO interface to NUOPC when building NUOPC interface
+    set(HEMCO_INTERFACE
+        nuopc
         CACHE STRING "HEMCO interface type (used to choose appropriate I/O option)"
     )
 endif()

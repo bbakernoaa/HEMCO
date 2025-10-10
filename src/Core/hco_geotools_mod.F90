@@ -539,7 +539,7 @@ CONTAINS
 
   END SUBROUTINE HCO_GetSUNCOS
 !EOC
-#if defined(ESMF_)
+#if defined(MAPL_ESMF)
 !------------------------------------------------------------------------------
 !                   Harmonized Emissions Component (HEMCO)                    !
 !------------------------------------------------------------------------------
@@ -557,10 +557,9 @@ CONTAINS
 !
 ! !USES
 !
-#include "MAPL_Generic.h"
-    USE ESMF
-    USE MAPLBase_Mod
-    USE HCO_STATE_MOD,   ONLY : HCO_STATE
+     USE ESMF
+     USE MAPLBase_Mod
+     USE HCO_STATE_MOD,   ONLY : HCO_STATE
 !
 ! !INPUT PARAMETERS:
 !

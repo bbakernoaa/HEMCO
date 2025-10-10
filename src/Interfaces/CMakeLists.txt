@@ -11,6 +11,12 @@ if(HEMCO_EXTERNAL_CONFIG AND MAPL_ESMF)
     add_subdirectory(MAPL_ESMF)
 endif()
 
+# if NUOPC interface is enabled:
+option(BUILD_NUOPC_INTERFACE "Build NUOPC interface for HEMCO" OFF)
+if (BUILD_NUOPC_INTERFACE)
+    add_subdirectory(NUOPC)
+endif()
+
 # if org GEOS:
 # option (BUILD_GEOS_INTERFACE FALSE)
 

@@ -1,4 +1,4 @@
-#ifdef ESMF_
+#ifdef MAPL_ESMF
 ! We only need to refer to this include file if we are connecting
 ! to the GEOS-5 GCM via the ESMF/MAPL framework (bmy, 8/3/12)
 #include "MAPL_Generic.h"
@@ -23,7 +23,9 @@ MODULE HCO_inquireMod
   ! We only need to refer to these modules if we are connecting
   ! to the GEOS-5 GCM via the ESMF/MAPL framework (bmy, 8/3/12)
   USE ESMF
+#ifdef MAPL_ESMF
   USE MAPLBase_Mod
+#endif
 #endif
 
   IMPLICIT NONE
@@ -118,7 +120,7 @@ MODULE HCO_inquireMod
        PRINT *,TRIM( Iam ) // ": No available logical units"
     ENDIF
 
-#ifdef ESMF_
+#ifdef MAPL_ESMF
     VERIFY_(status)
 #endif
 

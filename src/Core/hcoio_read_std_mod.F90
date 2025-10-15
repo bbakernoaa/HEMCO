@@ -855,7 +855,7 @@ CONTAINS
              Direction = +1
           ENDIF
           CALL SrcFile_Parse ( HcoState,  Lct, srcFile2, &
-                               FOUND, RC, Direction = Direction )
+                               FOUND, RC, Direction )
           IF ( RC /= HCO_SUCCESS ) THEN
               CALL HCO_ERROR( 'ERROR 5', RC, THISLOC=LOC )
               RETURN
@@ -1003,7 +1003,7 @@ CONTAINS
 
              ! Get file name for this year
              CALL SrcFile_Parse ( HcoState, Lct, srcFile2, &
-                                  FOUND, RC, Year=iYear )
+                                  FOUND, RC, 0, iYear )
              IF ( RC /= HCO_SUCCESS ) THEN
                  CALL HCO_ERROR( 'ERROR 8', RC, THISLOC=LOC )
                  RETURN
@@ -1025,7 +1025,7 @@ CONTAINS
                                 ncLun2,    tidx1,    tidx2,   &
                                 wgt1,      wgt2,     oYMDhm2, &
                                 YMDhmb,    YMDhm1,   RC,      &
-                                Year=iYear                    )
+                                iYear                         )
              IF ( RC /= HCO_SUCCESS ) THEN
                  CALL HCO_ERROR( 'ERROR 9', RC, THISLOC=LOC )
                  RETURN

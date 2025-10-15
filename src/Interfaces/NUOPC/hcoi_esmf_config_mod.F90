@@ -7,7 +7,9 @@
 !
 ! !DESCRIPTION: Module HCOI\_ESMF\_\_CONFIG\_MOD provides simplified configuration
 ! management for the ESMF-based regridding system in HEMCO-NUOPC. This module
-! eliminates backward compatibility concerns and focuses on essential configuration
+! eliminates backward compati          CASE DEFAULT
+             CALL HCO_WARNING( 'Invalid REGRID_METHOD value, using BILINEAR', THISLOC=LOC )
+             SimpleConfigInstance%RegridMethod = HCOI_REGRID_METHOD_BILINEARty concerns and focuses on essential configuration
 ! parameters for direct operation on the host NUOPC model's native ESMF grid.
 !\\
 !\\

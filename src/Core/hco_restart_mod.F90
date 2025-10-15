@@ -77,6 +77,9 @@ MODULE HCO_RESTART_MOD
 #if defined(MAPL_ESMF)
    PRIVATE :: HCO_CopyFromIntnal_ESMF
 #endif
+#if defined(ESMF_) && !defined(MAPL_ESMF)
+   PRIVATE :: HCO_CopyFromIntnal_NUOPC
+#endif
 
   INTERFACE HCO_RestartDefine
      MODULE PROCEDURE HCO_RestartDefine_3D
@@ -322,9 +325,12 @@ CONTAINS
     ! ------------------------------------------------------------------
     ! Try to get from ESMF internal state
     ! ------------------------------------------------------------------
-#if defined(ESMF_)
+#if defined(MAPL_ESMF)
     CALL HCO_CopyFromIntnal_ESMF( HcoState, TRIM(Name),   &
                                   1,        FLD,      RC, Arr3D=Arr3D )
+#elif defined(ESMF_) && !defined(MAPL_ESMF)
+    CALL HCO_CopyFromIntnal_NUOPC( HcoState, TRIM(Name),   &
+                                   1,        FLD,      RC, Arr3D=Arr3D )
     IF ( RC /= HCO_SUCCESS ) THEN
         CALL HCO_ERROR( 'ERROR 2', RC, THISLOC=LOC )
         RETURN
@@ -487,9 +493,12 @@ CONTAINS
     ! ------------------------------------------------------------------
     ! Try to get from ESMF internal state
     ! ------------------------------------------------------------------
-#if defined(ESMF_)
+#if defined(MAPL_ESMF)
     CALL HCO_CopyFromIntnal_ESMF( HcoState, TRIM(Name),   &
                                   1,        FLD,      RC, Arr2D=Arr2D )
+#elif defined(ESMF_) && !defined(MAPL_ESMF)
+    CALL HCO_CopyFromIntnal_NUOPC( HcoState, TRIM(Name),   &
+                                   1,        FLD,      RC, Arr2D=Arr2D )
     IF ( RC /= HCO_SUCCESS ) THEN
         CALL HCO_ERROR( 'ERROR 4', RC, THISLOC=LOC )
         RETURN
@@ -643,9 +652,12 @@ CONTAINS
     ! Data written to internal state?
     WRITTEN = .FALSE.
 
-#if defined(ESMF_)
+#if defined(MAPL_ESMF)
     CALL HCO_CopyFromIntnal_ESMF( HcoState, TRIM(Name), &
                                   -1,       WRITTEN,    RC, Arr3D=Arr3D )
+#elif defined(ESMF_) && !defined(MAPL_ESMF)
+    CALL HCO_CopyFromIntnal_NUOPC( HcoState, TRIM(Name), &
+                                   -1,       WRITTEN,    RC, Arr3D=Arr3D )
 #endif
 
     ! Pass to output
@@ -711,9 +723,12 @@ CONTAINS
     ! Data written to internal state?
     WRITTEN = .FALSE.
 
-#if defined(ESMF_)
+#if defined(MAPL_ESMF)
     CALL HCO_CopyFromIntnal_ESMF( HcoState, TRIM(Name), &
                                   -1,       WRITTEN,    RC, Arr2D=Arr2D )
+#elif defined(ESMF_) && !defined(MAPL_ESMF)
+    CALL HCO_CopyFromIntnal_NUOPC( HcoState, TRIM(Name), &
+                                   -1,       WRITTEN,    RC, Arr2D=Arr2D )
 #endif
 
     ! Pass to output
@@ -857,6 +872,74 @@ CONTAINS
     RC = HCO_SUCCESS
 
   END SUBROUTINE HCO_CopyFromIntnal_ESMF
+!EOC
+#endif
+#if defined(ESMF_) && !defined(MAPL_ESMF)
+!------------------------------------------------------------------------------
+!                   Harmonized Emissions Component (HEMCO)                    !
+!------------------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: HCO_CopyFromIntnal_NUOPC
+!
+! !DESCRIPTION: Subroutine HCO\_CopyFromIntnal\_NUOPC attempts to transfer
+! data to and from the ESMF internal state for NUOPC applications.
+!\\
+!\\
+! !INTERFACE:
+!
+  SUBROUTINE HCO_CopyFromIntnal_NUOPC ( HcoState,  Name,    &
+                                        Direction, Found, RC, Arr2D, Arr3D )
+!
+! !USES:
+!
+     USE ESMF
+     USE HCO_STATE_MOD,   ONLY : Hco_State
+!
+! !ARGUMENTS:
+!
+    TYPE(HCO_State),     POINTER                 :: HcoState
+    CHARACTER(LEN=*),    INTENT(IN   )           :: Name
+    INTEGER,             INTENT(IN   )           :: Direction    ! 1: internal to Arr2D; -1: Arr2D to internal
+    LOGICAL,             INTENT(  OUT)           :: Found
+    INTEGER,             INTENT(INOUT)           :: RC
+    REAL(sp),            INTENT(INOUT), OPTIONAL :: Arr2D(HcoState%NX,HcoState%NY)
+    REAL(sp),            INTENT(INOUT), OPTIONAL :: Arr3D(HcoState%NX,HcoState%NY,HcoState%NZ)
+!
+! !REVISION HISTORY:
+!  10 Oct 2025 - B. Baker/Copilot - Initial version for NUOPC interface
+!  See https://github.com/geoschem/hemco for complete history
+!EOP
+!------------------------------------------------------------------------------
+!BOC
+!
+! !LOCAL VARIABLES:
+!
+    CHARACTER(LEN=255)   :: MSG, LOC
+
+    ! ================================================================
+    ! HCO_CopyFromIntnal_NUOPC begins here
+    ! ================================================================
+
+    ! For now, NUOPC restart functionality is not fully implemented
+    ! This is a placeholder that allows the build to complete
+    ! TODO: Implement full NUOPC internal state handling
+    
+    LOC = 'HCO_CopyFromIntnal_NUOPC (hco_restart_mod.F90)'
+    
+    ! Set found to false for now - no restart data transferred
+    Found = .FALSE.
+    
+    ! Log message if verbose
+    IF ( HcoState%Config%doVerbose ) THEN
+       MSG = 'NUOPC restart functionality not yet fully implemented for: ' // TRIM(Name)
+       CALL HCO_MSG(MSG,LUN=HcoState%Config%hcoLogLUN)
+    ENDIF
+
+    ! Return success
+    RC = HCO_SUCCESS
+
+  END SUBROUTINE HCO_CopyFromIntnal_NUOPC
 !EOC
 #endif
 END MODULE HCO_RESTART_MOD

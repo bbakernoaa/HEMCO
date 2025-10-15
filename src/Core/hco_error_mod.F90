@@ -186,6 +186,8 @@ CONTAINS
 #if defined( MAPL_ESMF )
      USE ESMF
      USE MAPLBase_Mod
+#elif defined( ESMF_ )
+     USE ESMF
 #endif
 !
 ! !INPUT PARAMETERS:
@@ -207,7 +209,7 @@ CONTAINS
     INTEGER             :: I, J, hcoLogLUN
     CHARACTER(LEN=1023) :: MSG, MSG1, MSG2
 #if defined( ESMF_)
-    INTEGER             :: localPET, STATUS
+    INTEGER             :: localPET, esmf_rc
     CHARACTER(4)        :: localPETchar
     TYPE(ESMF_VM)       :: VM
 #endif
@@ -226,8 +228,9 @@ CONTAINS
     ! Construct error message
 #if defined( ESMF_ )
     ! Get current thread number
-    CALL ESMF_VMGetCurrent(VM, RC=STATUS)
-    CALL ESMF_VmGet( VM, localPET=localPET, __RC__ )
+    CALL ESMF_VMGetCurrent(VM, rc=esmf_rc)
+
+    CALL ESMF_VmGet( VM, localPET=localPET, rc=esmf_rc )
     WRITE(localPETchar,'(I4.4)') localPET
     MSG1 = 'HEMCO ERROR ['//TRIM(localPETchar)//']: '//TRIM(ErrMsg)
 #else

@@ -375,7 +375,7 @@ if(BUILD_NUOPC_INTERFACE)
         INTERFACE ${ESMF_INCLUDE_DIRS}
     )
     target_compile_definitions(HEMCOBuildProperties
-        INTERFACE ESMF_
+        INTERFACE ESMF_ NUOPC_ESMF
     )
 
     # Set HEMCO interface to NUOPC when building NUOPC interface

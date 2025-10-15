@@ -26,7 +26,7 @@ MODULE HCOIO_Util_Mod
 !
 ! !PUBLIC MEMBER FUNCTIONS:
 !
-#if !defined(ESMF_)
+#if !defined( ESMF_ ) || defined( NUOPC_ESMF )
   PUBLIC :: GET_TIMEIDX
   PUBLIC :: Check_AvailYMDhm
   PUBLIC :: prefYMDhm_Adjust
@@ -64,7 +64,7 @@ MODULE HCOIO_Util_Mod
 
 CONTAINS
 !EOC
-#if !defined( ESMF_ )
+#if !defined( ESMF_ ) || defined( NUOPC_ESMF )
 !------------------------------------------------------------------------------
 !                   Harmonized Emissions Component (HEMCO)                    !
 !------------------------------------------------------------------------------

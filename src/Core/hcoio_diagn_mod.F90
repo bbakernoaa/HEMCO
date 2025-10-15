@@ -251,12 +251,15 @@ CONTAINS
 
 #if defined(ESMF_)
     !------------------------------------------------------------------------
-    ! ESMF environment: call ESMF output routines
+    ! ESMF environment: call ESMF output routines (using standard interface for NUOPC)
     !------------------------------------------------------------------------
     CALL HCOIO_Write( HcoState,                                              &
+                      ForceWrite,                                            &
                       RC,                                                    &
+                      PREFIX      = PREFIX,                                  &
+                      UsePrevTime = UsePrevTime,                             &
                       OnlyIfFirst = OnlyIfFirst,                             &
-                      COL          = COL                                    )
+                      COL         = COL                                     )
 
     ! Trap errors
     IF ( RC /= HCO_SUCCESS ) THEN

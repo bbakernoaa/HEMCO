@@ -25,6 +25,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install GCC
+        run: brew install gcc@${{ matrix.gcc_version }}
+
       - name: Install dependencies
         run: brew install netcdf netcdf-fortran
 

@@ -180,3 +180,7 @@ if(NOT TARGET NetCDF-F)
         PROPERTY INTERFACE_LINK_LIBRARIES NetCDF-C
     )
 endif()
+
+if(NOT TARGET NetCDF::NetCDF_Fortran)
+  add_library(NetCDF::NetCDF_Fortran ALIAS NetCDF-F)
+endif()

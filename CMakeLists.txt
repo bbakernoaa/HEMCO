@@ -37,85 +37,11 @@ endif()
 add_library(HEMCOBuildProperties INTERFACE)
 
 #---------------------------------------------------------------------
-# Default compiler options
-#
-# HEMCO_Fortran_FLAGS_<COMPILER_ID> : common flags (all build types) 
-# HEMCO_Fortran_FLAGS_<CONFIG>_<COMPILER_ID> : types-specific flags
-#
-# Valid COMPILER_ID: Intel and GNU
-# Valid CONFIG: RELEASE, DEBUG, RELWITHDEBINFO
+# Set default build type
 #---------------------------------------------------------------------
-set(HEMCO_Fortran_FLAGS_Intel
-   -cpp -w -auto -noalign "SHELL:-convert big_endian" "SHELL:-fp-model source" -mcmodel=medium
-   -shared-intel -traceback -DLINUX_IFORT
-   CACHE STRING "HEMCO compiler flags for all build types with Intel compilers"
-)
-set(HEMCO_Fortran_FLAGS_RELEASE_Intel
-   -O2
-   CACHE STRING "HEMCO compiler flags for build type release with Intel compilers"
-)
-set(HEMCO_Fortran_FLAGS_RELWITHDEBINFO_Intel
-   -O2
-   CACHE STRING "HEMCO compiler flags for build type relwithdebinfo with Intel compilers"
-)
-set(HEMCO_Fortran_FLAGS_DEBUG_Intel
-   -g -O0 "SHELL:-check arg_temp_created" "SHELL:-debug all" -fpe0 -ftrapuv -check,bounds -DDEBUG
-   CACHE STRING "HEMCO compiler flags for build type debug with Intel compilers"
-)
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
-    # arm based processors only support mcmodels of large small tiny
-    set(HEMCO_Fortran_FLAGS_GNU
-    -cpp -w -std=legacy -fautomatic -fno-align-commons -fconvert=big-endian
-    -fno-range-check -mcmodel=small -fbacktrace -g -DLINUX_GFORTRAN
-    -ffree-line-length-none
-    CACHE STRING "HEMCO compiler flags for all build types with GNU compilers"
-    )
-else()
-    set(HEMCO_Fortran_FLAGS_GNU
-    -cpp -w -std=legacy -fautomatic -fno-align-commons -fconvert=big-endian
-    -fno-range-check -mcmodel=medium -fbacktrace -g -DLINUX_GFORTRAN
-    -ffree-line-length-none
-    CACHE STRING "HEMCO compiler flags for all build types with GNU compilers"
-    )
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose build type: Debug Release RelWithDebInfo MinSizeRel")
 endif()
-set(HEMCO_Fortran_FLAGS_RELEASE_GNU
-   -O3 -funroll-loops
-   CACHE STRING "HEMCO compiler flags for build type release with GNU compilers"
-)
-set(HEMCO_Fortran_FLAGS_RELWITHDEBINFO_GNU
-   -O3 -funroll-loops
-   CACHE STRING "HEMCO compiler flags for build type relwithdebinfo with GNU compilers"
-)
-set(HEMCO_Fortran_FLAGS_DEBUG_GNU
-   -g -gdwarf-2 -gstrict-dwarf -O0 -Wall -Wextra -Wconversion -Warray-temporaries 
-   -fcheck=array-temps -ffpe-trap=invalid,zero,overflow -finit-real=snan -fcheck=bounds -fcheck=pointer
-   -fcheck=no-recursion
-   CACHE STRING "HEMCO compiler flags for build type debug with GNU compilers"
-)
-
-set(HEMCO_SUPPORTED_COMPILER_IDS "Intel" "GNU")
-if(NOT CMAKE_Fortran_COMPILER_ID IN_LIST HEMCO_SUPPORTED_COMPILER_IDS)
-   message(FATAL_ERROR "HEMCO does not support ${CMAKE_Fortran_COMPILER_ID} compilers")
-endif()
-
-#---------------------------------------------------------------------
-# Assign comiler options to build properties
-#---------------------------------------------------------------------
-target_compile_options(HEMCOBuildProperties
-   INTERFACE
-   $<$<STREQUAL:${CMAKE_Fortran_COMPILER_ID},Intel>:
-      ${HEMCO_Fortran_FLAGS_Intel}
-      $<$<CONFIG:Debug>:${HEMCO_Fortran_FLAGS_DEBUG_Intel}>
-      $<$<CONFIG:RelWithDebInfo>:${HEMCO_Fortran_FLAGS_RELWITHDEBINFO_Intel}>
-      $<$<CONFIG:Release>:${HEMCO_Fortran_FLAGS_RELEASE_Intel}>
-   >
-   $<$<STREQUAL:${CMAKE_Fortran_COMPILER_ID},GNU>:
-      ${HEMCO_Fortran_FLAGS_GNU}
-      $<$<CONFIG:Debug>:${HEMCO_Fortran_FLAGS_DEBUG_GNU}>
-      $<$<CONFIG:RelWithDebInfo>:${HEMCO_Fortran_FLAGS_RELWITHDEBINFO_GNU}>
-      $<$<CONFIG:Release>:${HEMCO_Fortran_FLAGS_RELEASE_GNU}>
-   >
-)
 
 #-----------------------------------------------------------------------------
 # Set USE_REAL8 as cache variable to not override the existing definition
@@ -172,43 +98,12 @@ target_include_directories(HEMCOBuildProperties
 )
 
 #-----------------------------------------------------------------------------
-# Append HEMCO's environment variables to CMAKE_PREFIX_PATH
-#-----------------------------------------------------------------------------
-list(APPEND CMAKE_PREFIX_PATH
-    # Possible NetCDF environment variables
-    $ENV{NetCDF_F_ROOT}     $ENV{NetCDF_C_ROOT}     $ENV{NetCDF_ROOT}
-    $ENV{NETCDF_F_ROOT}     $ENV{NETCDF_C_ROOT}     $ENV{NETCDF_ROOT}
-    $ENV{NetCDF_Fortran_ROOT}
-    $ENV{NETCDF_FORTRAN_ROOT}
-
-    # Possible HEMCO environmnet variables (still needed? -ewl)
-    $ENV{GC_F_BIN} 	    $ENV{GC_BIN}
-    $ENV{GC_F_INCLUDE} 	    $ENV{GC_INCLUDE}
-    $ENV{GC_F_LIB} 	    $ENV{GC_LIB}
-)
-
-#-----------------------------------------------------------------------------
 # Link NetCDF-F to HEMCOBuildProperties
 #-----------------------------------------------------------------------------
 find_package(NetCDF REQUIRED)
-target_include_directories(HEMCOBuildProperties
-    INTERFACE ${NETCDF_INCLUDE_DIRS}
-)
 target_link_libraries(HEMCOBuildProperties
-    INTERFACE ${NETCDF_LIBRARIES}
+    INTERFACE NetCDF::NetCDF_Fortran
 )
-
-#-----------------------------------------------------------------------------
-# Use the NC_HAS_COMPRESSION def if nf_def_var_deflate is in netcdf.inc
-#-----------------------------------------------------------------------------
-if(EXISTS ${NETCDF_F77_INCLUDE_DIR}/netcdf.inc)
-    file(READ ${NETCDF_F77_INCLUDE_DIR}/netcdf.inc NCINC)
-    if("${NCINC}" MATCHES ".*nf_def_var_deflate.*")
-        target_compile_definitions(HEMCOBuildProperties
-            INTERFACE "NC_HAS_COMPRESSION"
-        )
-    endif()
-endif()
 
 #-----------------------------------------------------------------------------
 # Print a description of the source code repo's version
@@ -451,3 +346,6 @@ endif()
 # Add source code directory
 #-----------------------------------------------------------------------------
 add_subdirectory(src)
+
+enable_testing()
+add_subdirectory(tests)

@@ -13,7 +13,7 @@ PROGRAM TestNcdfUtil
   !
   ! !USES:
   !
-  USE HCO_PRECISION_MOD, ONLY: fp
+  USE HCO_PRECISION_MOD, ONLY: fp, f4, f8
   USE HCO_m_netcdf_io_define
   USE HCO_m_netcdf_io_create
   USE HCO_m_netcdf_io_write
@@ -90,6 +90,13 @@ CONTAINS
     REAL(fp)            :: T(ILONG, ILAT, IVERT, ITIME)
     CHARACTER :: DESC(ICHAR1, ICHAR2)
     LOGICAL, PARAMETER  :: COMPRESS = .TRUE.
+    INTEGER :: nc_type
+
+    IF (fp == f4) THEN
+       nc_type = nf90_float
+    ELSE IF (fp == f8) THEN
+       nc_type = nf90_double
+    END IF
 
     WRITE(6, '(a)') '=== Begin netCDF file creation test ==='
     CALL NcCr_Wr(fId, test_file)
@@ -129,7 +136,7 @@ CONTAINS
     CALL NcDef_Var_Attributes(fId, vId, 'units', 'degrees_east')
 
     var3 = (/ idLon, idLat, idTime /)
-    CALL NcDef_Variable(fId, 'PS', nf90_float, 3, var3, vId, COMPRESS)
+    CALL NcDef_Variable(fId, 'PS', nc_type, 3, var3, vId, COMPRESS)
     CALL NcDef_Var_Attributes(fId, vId, 'long_name', 'Surface Pressure')
     CALL NcDef_Var_Attributes(fId, vId, 'units', 'hPa')
     CALL NcDef_Var_Attributes(fId, vId, '_FillValue', 1e15_fp)
@@ -138,7 +145,7 @@ CONTAINS
     CALL NcBegin_Def(fId)
 
     var4 = (/ idLon, idLat, idLev, idTime /)
-    CALL NcDef_Variable(fId, 'T', nf90_float, 4, var4, vId, COMPRESS)
+    CALL NcDef_Variable(fId, 'T', nc_type, 4, var4, vId, COMPRESS)
     CALL NcDef_Var_Attributes(fId, vId, 'long_name', 'Temperature')
     CALL NcDef_Var_Attributes(fId, vId, 'units', 'K')
     CALL NcDef_Var_Attributes(fId, vId, '_FillValue', 1e15_fp)

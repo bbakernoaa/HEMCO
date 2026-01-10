@@ -1418,6 +1418,12 @@ CONTAINS
     DCSZ = SIZE( ExtState%DRYCOEFF )
 
     ! Loop over surface boxes
+!$OMP PARALLEL DO                                                            &
+!$OMP DEFAULT( SHARED )                                                      &
+!$OMP PRIVATE( I, J, K, KK, TEMPK, TEMPC, RT, RI, RLU, RAC, RGSS, RGSO,      &
+!$OMP            RCLS, RCLO, RAD0, RIX, GFACT, GFACI, LAI, SUNCOS, CLDFRC,     &
+!$OMP            DTMP1, DTMP2, DTMP3, DTMP4                                  ) &
+!$OMP COLLAPSE(2)
     DO J = 1, HcoState%NY
     DO I = 1, HcoState%NX
 
@@ -1605,6 +1611,7 @@ CONTAINS
        ENDDO !K
     ENDDO !I
     ENDDO !J
+!$OMP END PARALLEL DO
 
     ! Return w/ success
     RC = HCO_SUCCESS

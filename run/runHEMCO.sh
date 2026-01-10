@@ -8,7 +8,7 @@
 #SBATCH --mail-type=END
 
 # Set the proper # of threads for OpenMP
-export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK:-8}
 
 # Run GEOS_Chem.  The "time" command will return CPU and wall times.
 # Stdout and stderr will be directed to the log files specified above.

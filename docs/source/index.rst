@@ -52,6 +52,7 @@ HEMCO is given in :cite:t:`Keller_et_al._2014` and
    hco-ref-guide/basic-examples.rst
    hco-ref-guide/hemco-config.rst
    hco-ref-guide/extensions.rst
+   hco-ref-guide/adding-extensions.md
    hco-ref-guide/units.rst
    hco-ref-guide/diagnostics.rst
    hco-ref-guide/more-examples.rst

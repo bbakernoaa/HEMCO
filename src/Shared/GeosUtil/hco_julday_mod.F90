@@ -54,11 +54,11 @@ CONTAINS
 !
     INTEGER, INTENT(IN) :: YYYY        ! Year (must be in 4-digit format!)
     INTEGER, INTENT(IN) :: MM          ! Month (1-12)
-    REAL*8,  INTENT(IN) :: DD          ! Day of month (may be fractional!)
+    real(f8),  INTENT(IN) :: DD          ! Day of month (may be fractional!)
 !
 ! !RETURN VALUE:
 !
-    REAL*8              :: JULIANDAY   ! Astronomical Julian Date
+    real(f8)              :: JULIANDAY   ! Astronomical Julian Date
 !
 ! !REMARKS:
 !  (1) Algorithm taken from "Practical Astronomy With Your Calculator",
@@ -79,7 +79,7 @@ CONTAINS
 ! !LOCAL VARIABLES:
 !
     INTEGER             :: YEAR1, MONTH1
-    REAL*8              :: X1, A, B, C, D
+    real(f8)              :: X1, A, B, C, D
     LOGICAL             :: ISGREGORIAN
 
     !==================================================================
@@ -157,11 +157,11 @@ CONTAINS
 !
 ! !INPUT PARAMETERS:
 !
-    REAL*8, INTENT(IN) :: X
+    real(f8), INTENT(IN) :: X
 !
 ! !RETURN VALUE:
 !
-    REAL*8             :: VALUE
+    real(f8)             :: VALUE
 !
 ! !REMARKS:
 !  The modified integer function is defined as follows:
@@ -201,7 +201,7 @@ CONTAINS
 !
 ! !INPUT PARAMETERS:
 !
-    REAL*8,  INTENT(IN)  :: JULIANDAY  ! Astronomical Julian Date
+    real(f8),  INTENT(IN)  :: JULIANDAY  ! Astronomical Julian Date
 !
 ! !OUTPUT PARAMETERS:
 !
@@ -220,9 +220,9 @@ CONTAINS
 !
 ! !LOCAL VARIABLES:
 !
-    REAL*4               :: HH, MM, SS
-    REAL*8               :: A, B, C, D, DAY, E, F
-    REAL*8               :: FDAY, G, I, J, JD, M, Y
+    real(f4)               :: HH, MM, SS
+    real(f8)               :: A, B, C, D, DAY, E, F
+    real(f8)               :: FDAY, G, I, J, JD, M, Y
 
     !=================================================================
     ! CALDATE begins here!
@@ -272,7 +272,7 @@ CONTAINS
     YYYYMMDD = ( INT( Y ) * 10000 ) + ( INT( M ) * 100 ) + INT( DAY )
 
     ! Hour-minute-second value
-    ! NOTE: HH, MM, SS are REAL*4 to avoid numerical roundoff errors
+    ! NOTE: HH, MM, SS are real(f4) to avoid numerical roundoff errors
     HH     = FDAY * 24d0
     MM     = ( HH - INT( HH ) ) * 60d0
     SS     = ( MM - INT( MM ) ) * 60d0

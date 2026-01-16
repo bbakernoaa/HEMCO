@@ -100,20 +100,17 @@ CONTAINS
 !------------------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: Regrid_MAPA2A
+!-----------------------------------------------------------------------
+!  ROUTINE: REGRID_MAPA2A
 !
-! !DESCRIPTION: Subroutine Regrid\_MAPA2A regrids input array NcArr onto
-! the simulation grid and stores the data in list container Lct. Horizontal
-! regridding is performed using MAP\_A2A algorithm. Vertical interpolation
-! between GEOS levels (full vs. reduced, GEOS-5 vs. GEOS-4), is also
-! supported.
-!\\
-!\\
-! This routine can remap concentrations and index-based quantities.
-!\\
-!\\
-! !INTERFACE:
+!  DESCRIPTION:
+!    Regrids input array onto simulation grid.
+!    Includes optimized unique value identification for index data.
 !
+!  REVISION HISTORY:
+!    2015-02-03:  C. Keller   - Initial version
+!    2025-01-24:  Jules       - Performance optimization
+!-----------------------------------------------------------------------
   SUBROUTINE REGRID_MAPA2A( HcoState, NcArr, LonE, LatE, Lct, RC )
 !
 ! !USES:
@@ -260,6 +257,9 @@ CONTAINS
        ! Get unique values. Loop over all input data values and add
        ! them to UNIQVALS vector if UNIQVALS doesn't hold that same value
        ! yet.
+       ! Optimized: check if the current value matches the last found unique
+       ! value before performing a full search. This is very effective for
+       ! spatially-clustered index data (like land types).
        NINDEX = 0
        DO T = 1, NTIME
        DO L = 1, NLEV
@@ -271,6 +271,10 @@ CONTAINS
 
           ! Check if value already exists in UNIQVALS
           IF ( NINDEX > 0 ) THEN
+             ! Fast-path: check last found unique value
+             IF ( IVAL == UNIQVALS(NINDEX) ) CYCLE
+
+             ! Full search
              IF ( ANY(UNIQVALS(1:NINDEX) == IVAL) ) CYCLE
           ENDIF
 

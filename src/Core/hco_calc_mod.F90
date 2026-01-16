@@ -775,16 +775,17 @@ CONTAINS
 !------------------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: Get_Current_Emissions
+!-----------------------------------------------------------------------
+!  ROUTINE: Get_Current_Emissions
 !
-! !DESCRIPTION: Subroutine Get\_Current\_Emissions calculates the current
-!  emissions for the specified emission container.
-!  This subroutine is only called by HCO\_CalcEmis and for base emission
-!  containers, i.e. containers of type 1.
-!\\
-!\\
-! !INTERFACE:
+!  DESCRIPTION:
+!    Calculates current emissions for a base emission container.
+!    Optimized with hoisted time index and optimized data lookups.
 !
+!  REVISION HISTORY:
+!    2012-08-25:  C. Keller   - Initial version
+!    2025-01-24:  Jules       - Performance optimizations
+!-----------------------------------------------------------------------
   SUBROUTINE Get_Current_Emissions( HcoState, BaseDct,   nI,   nJ,           &
                                     nL,       OUTARR_3D, MASK, RC, UseLL    )
 !
@@ -856,9 +857,7 @@ CONTAINS
     LOGICAL                 :: isBoxHt
     INTEGER                 :: LevDct1_Unit
     INTEGER                 :: LevDct2_Unit
-
-    ! testing only
-    INTEGER, PARAMETER      :: IX=25, IY=25
+    INTEGER                 :: staticTidx  ! Hoisted time index
 
     !=================================================================
     ! GET_CURRENT_EMISSIONS begins here
@@ -978,6 +977,13 @@ CONTAINS
     totLL = 0.0
     nnLL  = 0.0
 
+    ! Hoist time index if location-independent
+    staticTidx = -1
+    IF ( (BaseDct%Dta%tIDx%TypeID == 1) .OR. &
+         (BaseDct%Dta%tIDx%TypeID == 241)    ) THEN
+       staticTidx = tIDx_GetIndx( HcoState, BaseDct%Dta, 1, 1 )
+    ENDIF
+
     ! Loop over all latitudes and longitudes
     !$OMP PARALLEL DO                                                        &
     !$OMP DEFAULT( SHARED                                                   )&
@@ -1002,7 +1008,12 @@ CONTAINS
        !---------------------------------------------------------------------
        ! Get current time index for this container and at this location
        !---------------------------------------------------------------------
-       tIDx = tIDx_GetIndx( HcoState, BaseDct%Dta, I, J )
+       IF ( staticTidx > 0 ) THEN
+          tIDx = staticTidx
+       ELSE
+          tIDx = tIDx_GetIndx( HcoState, BaseDct%Dta, I, J )
+       ENDIF
+
        IF ( tIDx < 1 ) THEN
           WRITE( msg, * ) 'Cannot get time slice index at location ',I,J,    &
                           ': ', TRIM(BaseDct%cName), tIDx
@@ -1034,11 +1045,20 @@ CONTAINS
        totLL = totLL + UppLL
        nnLL  = nnLL  + 1
 
+       ! Optimized lookup for 1D or 2D data (moved out of L-loop)
+       IF ( BaseDct%Dta%SpaceDim == 1 ) THEN
+          tmpVal = BaseDct%Dta%V2(tIDx)%Val(1,1)
+       ELSEIF ( BaseDct%Dta%SpaceDim == 2 ) THEN
+          tmpVal = BaseDct%Dta%V2(tIDx)%Val(I,J)
+       ENDIF
+
        ! Loop over all levels
        DO L = LowLL, UppLL
 
-          ! Get base value. Use uniform value if scalar field.
-          tmpVal = Get_Value_From_DataCont( I, J, L, tIdx, BaseDct )
+          ! Get base value if 3D
+          IF ( BaseDct%Dta%SpaceDim == 3 ) THEN
+             tmpVal = BaseDct%Dta%V3(tIDx)%Val(I,J,L)
+          ENDIF
 
           ! If it's a missing value, mask box as unused
           ! and set value to zero.
@@ -1049,22 +1069,27 @@ CONTAINS
           ENDIF
 
           ! Otherwise, apply the vertical dilution factor (if necessary)
-          CALL Apply_Dilution_Factor( I        = I,                          &
-                                      J        = J,                          &
-                                      L        = L,                          &
-                                      LowLL    = LowLL,                      &
-                                      UppLL    = UppLL,                      &
-                                      HcoState = HcoState,                   &
-                                      BaseDct  = BaseDct,                    &
-                                      inData   = tmpVal,                     &
-                                      outData  = outArr_3D(I,J,L),           &
-                                      RC       = EC                         )
+          ! Optimized: bypass Dilution Factor call for 3D data or mode 2
+          IF ( (BaseDct%Dta%SpaceDim == 3) .OR. (BaseDct%Dta%EmisLmode == 2) ) THEN
+             outArr_3D(I,J,L) = tmpVal
+          ELSE
+             CALL Apply_Dilution_Factor( I        = I,                          &
+                                         J        = J,                          &
+                                         L        = L,                          &
+                                         LowLL    = LowLL,                      &
+                                         UppLL    = UppLL,                      &
+                                         HcoState = HcoState,                   &
+                                         BaseDct  = BaseDct,                    &
+                                         inData   = tmpVal,                     &
+                                         outData  = outArr_3D(I,J,L),           &
+                                         RC       = EC                         )
+          ENDIF
 
           ! Trap errors
           IF ( EC /= HCO_SUCCESS ) THEN
              error = 1
              msg   = 'Error encountered in routine "Apply_Dilution_Factor"!'
-             CYCLE
+             EXIT
           ENDIF
 
        ENDDO !L
@@ -1180,6 +1205,13 @@ CONTAINS
           ! and to -1 if negative scale factor is ignored.
           error = 0
 
+          ! Hoist time index if location-independent
+          staticTidx = -1
+          IF ( (ScalDct%Dta%tIDx%TypeID == 1) .OR. &
+               (ScalDct%Dta%tIDx%TypeID == 241)    ) THEN
+             staticTidx = tIDx_GetIndx( HcoState, ScalDct%Dta, 1, 1 )
+          ENDIF
+
           ! Loop over all latitudes and longitudes
           !$OMP PARALLEL DO                                                  &
           !$OMP DEFAULT( SHARED                                             )&
@@ -1220,7 +1252,12 @@ CONTAINS
              IF ( maskScale <= 0.0_sp ) CYCLE
 
              ! Get current time index for this container and at this location
-             tIDx = tIDx_GetIndx( HcoState, ScalDct%Dta, I, J )
+             IF ( staticTidx > 0 ) THEN
+                tIDx = staticTidx
+             ELSE
+                tIDx = tIDx_GetIndx( HcoState, ScalDct%Dta, I, J )
+             ENDIF
+
              IF ( tIDx < 1 ) THEN
                 WRITE(*,*) 'Cannot get time slice index at location ',I,J,   &
                            ': ', TRIM(ScalDct%cName), tIDx
@@ -1279,6 +1316,13 @@ CONTAINS
                 CYCLE
              ENDIF
 
+             ! Optimized lookup for 1D or 2D scale factor
+             IF ( ScalDct%Dta%SpaceDim == 1 ) THEN
+                tmpVal = ScalDct%Dta%V2(tIDx)%Val(1,1)
+             ELSEIF ( ScalDct%Dta%SpaceDim == 2 ) THEN
+                tmpVal = ScalDct%Dta%V2(tIDx)%Val(I,J)
+             ENDIF
+
              ! Loop over all vertical levels of the base field
              DO L = LowLL,UppLL
 
@@ -1289,10 +1333,11 @@ CONTAINS
                 IF ( L > ScalLL ) TmpLL = ScalLL
 
                 !------------------------------------------------------------
-                ! Get scale factor for this grid box. Use same uniform
-                ! value if it's a scalar field.
+                ! Get scale factor for this grid box if 3D
                 !------------------------------------------------------------
-                tmpVal = Get_Value_From_DataCont( I, J, L, tIdX, ScalDct )
+                IF ( ScalDct%Dta%SpaceDim == 3 ) THEN
+                   tmpVal = ScalDct%Dta%V3(tIDx)%Val(I,J,TmpLL)
+                ENDIF
 
                 ! Set missing value to one
                 IF ( tmpVal == HCO_MISSVAL ) tmpVal = 1.0_sp
@@ -1339,27 +1384,10 @@ CONTAINS
                 ! Trap errors
                 IF ( EC /= HCO_SUCCESS ) THEN
                    error = 2
-                   CYCLE
+                   EXIT
                 ENDIF
 
              ENDDO
-
-             !---------------------------------------------------------------
-             ! Verbose printout
-             !----------------------------------------------------------------
-             IF ( HcoState%Config%doVerbose  .and.                     &
-                  I == ix .and. J == iy           ) THEN
-                write(MSG,*) 'Scale field ', TRIM(ScalDct%cName)
-                CALL HCO_MSG(MSG,LUN=HcoState%Config%hcoLogLUN)
-                write(MSG,*) 'Time slice: ', tIdx
-                CALL HCO_MSG(MSG,LUN=HcoState%Config%hcoLogLUN)
-                write(MSG,*) 'IX, IY: ', IX, IY
-                CALL HCO_MSG(MSG,LUN=HcoState%Config%hcoLogLUN)
-                write(MSG,*) 'Scale factor (IX,IY,L1): ', TMPVAL
-                CALL HCO_MSG(MSG,LUN=HcoState%Config%hcoLogLUN)
-                write(MSG,*) 'Mathematical operation : ', ScalDct%Oper
-                CALL HCO_MSG(MSG,LUN=HcoState%Config%hcoLogLUN)
-             ENDIF
 
           ENDDO !I
           ENDDO !J
@@ -2708,18 +2736,17 @@ END FUNCTION GetEmisLUnit
 
   END SUBROUTINE GetDilFact
 #ifdef ADJOINT
-!BOP
+!-----------------------------------------------------------------------
+!  ROUTINE: Get_Current_Emissions_Adj
 !
-! !IROUTINE: Get_Current_Emissions
+!  DESCRIPTION:
+!    Adjoint version of Get_Current_Emissions.
+!    Optimized with hoisted time index and optimized data lookups.
 !
-! !DESCRIPTION: Subroutine Get\_Current\_Emissions calculates the current
-!  emissions for the specified emission container.
-!  This subroutine is only called by HCO\_CalcEmis and for base emission
-!  containers, i.e. containers of type 1.
-!\\
-!\\
-! !INTERFACE:
-!
+!  REVISION HISTORY:
+!    2012-08-25:  C. Keller   - Initial version
+!    2025-01-24:  Jules       - Performance optimizations
+!-----------------------------------------------------------------------
   SUBROUTINE Get_Current_Emissions_Adj( HcoState, BaseDct,   &
                                     nI, nJ, nL, OUTARR_3D, MASK, RC, UseLL )
 !
@@ -2802,9 +2829,7 @@ END FUNCTION GetEmisLUnit
     LOGICAL                 :: isBoxHt
     INTEGER                 :: LevDct1_Unit
     INTEGER                 :: LevDct2_Unit
-
-    ! testing only
-    INTEGER                 :: IX, IY
+    INTEGER                 :: staticTidx  ! Hoisted time index
 
     !=================================================================
     ! GET_CURRENT_EMISSIONS begins here
@@ -2818,10 +2843,6 @@ END FUNCTION GetEmisLUnit
     ! Enter
     CALL HCO_ENTER(HcoState%Config%Err, LOC, RC )
     IF(RC /= HCO_SUCCESS) RETURN
-
-    ! testing only:
-    IX = 3 !-1
-    IY = 8 !-1
 
     ! Check if container contains data
     IF ( .NOT. FileData_ArrIsDefined(BaseDct%Dta) ) THEN
@@ -2920,6 +2941,13 @@ END FUNCTION GetEmisLUnit
        ENDIF
     ENDIF
 
+    ! Hoist time index if location-independent
+    staticTidx = -1
+    IF ( (BaseDct%Dta%tIDx%TypeID == 1) .OR. &
+         (BaseDct%Dta%tIDx%TypeID == 241)    ) THEN
+       staticTidx = tIDx_GetIndx( HcoState, BaseDct%Dta, 1, 1 )
+    ENDIF
+
     ! Loop over all latitudes and longitudes
 !$OMP PARALLEL DO                                                            &
 !$OMP DEFAULT( SHARED                                                       )&
@@ -2936,7 +2964,12 @@ END FUNCTION GetEmisLUnit
        nnLL  = 0
 
        ! Get current time index for this container and at this location
-       tIDx = tIDx_GetIndx( HcoState, BaseDct%Dta, I, J )
+       IF ( staticTidx > 0 ) THEN
+          tIDx = staticTidx
+       ELSE
+          tIDx = tIDx_GetIndx( HcoState, BaseDct%Dta, I, J )
+       ENDIF
+
        IF ( tIDx < 1 ) THEN
           WRITE(MSG,*) 'Cannot get time slice index at location ',I,J,&
                        ': ', TRIM(BaseDct%cName), tIDx
@@ -2960,15 +2993,18 @@ END FUNCTION GetEmisLUnit
        totLL = totLL + UppLL
        nnLL  = nnLL + 1
 
+       ! Optimized lookup for 1D or 2D data
+       IF ( BaseDct%Dta%SpaceDim == 1 ) THEN
+          TMPVAL = BaseDct%Dta%V2(tIDx)%Val(1,1)
+       ELSEIF ( BaseDct%Dta%SpaceDim == 2 ) THEN
+          TMPVAL = BaseDct%Dta%V2(tIDx)%Val(I,J)
+       ENDIF
+
        ! Loop over all levels
        DO L = LowLL, UppLL
 
-          ! Get base value. Use uniform value if scalar field.
-          IF ( BaseDct%Dta%SpaceDim == 1 ) THEN
-             TMPVAL = BaseDct%Dta%V2(tIDx)%Val(1,1)
-          ELSEIF ( BaseDct%Dta%SpaceDim == 2 ) THEN
-             TMPVAL = BaseDct%Dta%V2(tIDx)%Val(I,J)
-          ELSE
+          ! Get base value if 3D
+          IF ( BaseDct%Dta%SpaceDim == 3 ) THEN
              TMPVAL = BaseDct%Dta%V3(tIDx)%Val(I,J,L)
           ENDIF
 
@@ -3090,6 +3126,13 @@ END FUNCTION GetEmisLUnit
        ! and to -1 if negative scale factor is ignored.
        ERROR = 0
 
+       ! Hoist time index if location-independent
+       staticTidx = -1
+       IF ( (ScalDct%Dta%tIDx%TypeID == 1) .OR. &
+            (ScalDct%Dta%tIDx%TypeID == 241)    ) THEN
+          staticTidx = tIDx_GetIndx( HcoState, ScalDct%Dta, 1, 1 )
+       ENDIF
+
        ! Loop over all latitudes and longitudes
 !$OMP PARALLEL DO                                                            &
 !$OMP DEFAULT( SHARED )                                                      &
@@ -3125,7 +3168,12 @@ END FUNCTION GetEmisLUnit
           IF ( MaskScale <= 0.0_sp ) CYCLE
 
           ! Get current time index for this container and at this location
-          tIDx = tIDx_GetIndx( HcoState, ScalDct%Dta, I, J )
+          IF ( staticTidx > 0 ) THEN
+             tIDx = staticTidx
+          ELSE
+             tIDx = tIDx_GetIndx( HcoState, ScalDct%Dta, I, J )
+          ENDIF
+
           IF ( tIDx < 1 ) THEN
              WRITE(*,*) 'Cannot get time slice index at location ',I,J,&
                           ': ', TRIM(ScalDct%cName), tIDx
@@ -3181,6 +3229,13 @@ END FUNCTION GetEmisLUnit
              EXIT
           ENDIF
 
+          ! Optimized lookup for 1D or 2D scale factor
+          IF ( ScalDct%Dta%SpaceDim == 1 ) THEN
+             TMPVAL = ScalDct%Dta%V2(tIDx)%Val(1,1)
+          ELSEIF ( ScalDct%Dta%SpaceDim == 2 ) THEN
+             TMPVAL = ScalDct%Dta%V2(tIDx)%Val(I,J)
+          ENDIF
+
           ! Loop over all vertical levels of the base field
           DO L = LowLL,UppLL
              ! If the vertical level exceeds the number of available
@@ -3192,14 +3247,9 @@ END FUNCTION GetEmisLUnit
                 TmpLL = L
              ENDIF
 
-             ! Get scale factor for this grid box. Use same uniform
-             ! value if it's a scalar field
-             IF ( ScalDct%Dta%SpaceDim == 1 ) THEN
-                TMPVAL = ScalDct%Dta%V2(tidx)%Val(1,1)
-             ELSEIF ( ScalDct%Dta%SpaceDim == 2 ) THEN
-                TMPVAL = ScalDct%Dta%V2(tidx)%Val(I,J)
-             ELSE
-                TMPVAL = ScalDct%Dta%V3(tidx)%Val(I,J,TmpLL)
+             ! Get scale factor for this grid box if 3D
+             IF ( ScalDct%Dta%SpaceDim == 3 ) THEN
+                TMPVAL = ScalDct%Dta%V3(tIDx)%Val(I,J,TmpLL)
              ENDIF
 
              ! Set missing value to one
@@ -3258,19 +3308,7 @@ END FUNCTION GetEmisLUnit
           ENDDO !LL
 
           ! Verbose mode
-          if ( HcoState%Config%doVerbose .and. i == ix .and. j == iy ) then
-             write(MSG,*) 'Scale field ', TRIM(ScalDct%cName)
-             CALL HCO_MSG(MSG,LUN=HcoState%Config%hcoLogLUN)
-             write(MSG,*) 'Time slice: ', tIdx
-             CALL HCO_MSG(MSG,LUN=HcoState%Config%hcoLogLUN)
-             write(MSG,*) 'IX, IY: ', IX, IY
-             CALL HCO_MSG(MSG,LUN=HcoState%Config%hcoLogLUN)
-             write(MSG,*) 'Scale factor (IX,IY,L1): ', TMPVAL
-             CALL HCO_MSG(MSG,LUN=HcoState%Config%hcoLogLUN)
-             write(MSG,*) 'Mathematical operation : ', ScalDct%Oper
-             CALL HCO_MSG(MSG,LUN=HcoState%Config%hcoLogLUN)
-!             write(lun,*) 'Updt (IX,IY,L1): ', OUTARR_3D(IX,IY,1)
-          endif
+          ! Removed testing only block
 
        ENDDO !I
        ENDDO !J

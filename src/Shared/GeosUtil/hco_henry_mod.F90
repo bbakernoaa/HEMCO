@@ -32,6 +32,7 @@
 ! !INTERFACE:
 !
 MODULE HCO_HENRY_MOD
+  USE HCO_PRECISION_MOD
 
   IMPLICIT NONE
   PRIVATE
@@ -50,9 +51,9 @@ MODULE HCO_HENRY_MOD
 !
 ! !DEFINED PARAMETERS:
 !
-  REAL*8, PARAMETER :: TREF = 298.15d0      ! [K          ]
-  REAL*8, PARAMETER :: R    = 8.3144598d0   ! [J K-1 mol-1]
-  REAL*8, PARAMETER :: ATM  = 101.325d0     ! [mPa (!)    ]
+  real(f8), PARAMETER :: TREF = 298.15d0      ! [K          ]
+  real(f8), PARAMETER :: R    = 8.3144598d0   ! [J K-1 mol-1]
+  real(f8), PARAMETER :: ATM  = 101.325d0     ! [mPa (!)    ]
 
 CONTAINS
 !EOC
@@ -75,13 +76,13 @@ CONTAINS
 !
 ! !INPUT PARAMETERS:
 !
-    REAL*8,  INTENT(IN)    :: thisK0  ! [M/atm]
-    REAL*8,  INTENT(IN)    :: thisCR  ! [-d ln kH / d(1/T) ]
-    REAL*8,  INTENT(IN)    :: TK      ! Temperature [K]
+    real(f8),  INTENT(IN)    :: thisK0  ! [M/atm]
+    real(f8),  INTENT(IN)    :: thisCR  ! [-d ln kH / d(1/T) ]
+    real(f8),  INTENT(IN)    :: TK      ! Temperature [K]
 !
 ! !OUTPUT PARAMETERS:
 !
-    REAL*8,  INTENT(OUT)   :: KH      ! Henry liquid over gas constant [-]
+    real(f8),  INTENT(OUT)   :: KH      ! Henry liquid over gas constant [-]
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
@@ -155,13 +156,13 @@ CONTAINS
 !
 ! !INPUT PARAMETERS:
 !
-    REAL*8,  INTENT(IN)    :: thispKa  ! pKa value [-]
-    REAL*8,  INTENT(IN)    :: PH       ! PH value [-]
-    REAL*8,  INTENT(IN)    :: KH       ! gas/aq Henry constant [-]
+    real(f8),  INTENT(IN)    :: thispKa  ! pKa value [-]
+    real(f8),  INTENT(IN)    :: PH       ! PH value [-]
+    real(f8),  INTENT(IN)    :: KH       ! gas/aq Henry constant [-]
 !
 ! !OUTPUT PARAMETERS:
 !
-    REAL*8,  INTENT(OUT)   :: HEFF     ! effective gas/aq constant [-]
+    real(f8),  INTENT(OUT)   :: HEFF     ! effective gas/aq constant [-]
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !

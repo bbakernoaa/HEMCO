@@ -33,6 +33,8 @@ MODULE HCOI_NUOPC_MOD
   ! ESMF environment only:
   PUBLIC :: HCO_SetServices_NUOPC
   PUBLIC :: HCO_SetExtState_NUOPC
+  PUBLIC :: HCO_SetExtDataPointer_2R_NUOPC
+  PUBLIC :: HCO_SetExtDataPointer_2S_NUOPC
   PUBLIC :: HCO_Imp2Ext_NUOPC
 !
 ! !PRIVATE MEMBER FUNCTIONS:
@@ -1116,5 +1118,111 @@ CONTAINS
 
       END SUBROUTINE HCO_Imp2Ext2I_NUOPC
 !EOC
+
+!------------------------------------------------------------------------------
+!                   Harmonized Emissions Component (HEMCO)                    !
+!------------------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: HCO_SetExtDataPointer_2R_NUOPC
+!
+! !DESCRIPTION: Sets the ExtData array pointer to point to the provided CDEPS data.
+! Enables zero-copy data transfer.
+!\\
+!\\
+! !INTERFACE:
+!
+      SUBROUTINE HCO_SetExtDataPointer_2R_NUOPC( ExtDat, DataPtr, NX, NY, RC )
+!
+! !USES:
+!
+      USE HCO_ARR_MOD,     ONLY : HCO_ArrAssert
+!
+! !ARGUMENTS:
+!
+      TYPE(ExtDat_2R),     POINTER         :: ExtDat
+      REAL(kind=8),        POINTER         :: DataPtr(:)
+      INTEGER,             INTENT(IN)      :: NX, NY
+      INTEGER,             INTENT(INOUT)   :: RC
+!
+! !REVISION HISTORY:
+!  28 Jan 2026 - B. Baker - Added for CDEPS inline pointer support
+!EOP
+!------------------------------------------------------------------------------
+!BOC
+!
+! !LOCAL VARIABLES:
+!
+      CHARACTER(LEN=255)           :: MSG, LOC
+      INTEGER                      :: STAT
+
+      LOC = 'HCO_SetExtDataPointer_2R_NUOPC (HCOI_NUOPC_MOD.F90)'
+
+      IF ( ExtDat%DoUse .AND. ASSOCIATED(DataPtr) ) THEN
+         ! Free existing memory if allocated (and owned by HEMCO)?
+         ! NOTE: HCO_ArrAssert typically allocates. We want to bypass that or replace it.
+         ! However, ExtDat%Arr%Val is a pointer.
+
+         ! Remap the 1D CDEPS pointer to the 2D HEMCO array
+         ! Assumes CDEPS data is contiguous and matches grid size
+         ExtDat%Arr%Val(1:NX, 1:NY) => DataPtr(1:NX*NY)
+
+         ! Verbose?
+      ENDIF
+
+      RC = HCO_SUCCESS
+
+      END SUBROUTINE HCO_SetExtDataPointer_2R_NUOPC
+!EOC
+
+!------------------------------------------------------------------------------
+!                   Harmonized Emissions Component (HEMCO)                    !
+!------------------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: HCO_SetExtDataPointer_2S_NUOPC
+!
+! !DESCRIPTION: Sets the ExtData array pointer to point to the provided CDEPS data.
+! Enables zero-copy data transfer.
+!\\
+!\\
+! !INTERFACE:
+!
+      SUBROUTINE HCO_SetExtDataPointer_2S_NUOPC( ExtDat, DataPtr, NX, NY, RC )
+!
+! !USES:
+!
+      USE HCO_ARR_MOD,     ONLY : HCO_ArrAssert
+!
+! !ARGUMENTS:
+!
+      TYPE(ExtDat_2S),     POINTER         :: ExtDat
+      REAL(kind=8),        POINTER         :: DataPtr(:)
+      INTEGER,             INTENT(IN)      :: NX, NY
+      INTEGER,             INTENT(INOUT)   :: RC
+!
+! !REVISION HISTORY:
+!  28 Jan 2026 - B. Baker - Added for CDEPS inline pointer support
+!EOP
+!------------------------------------------------------------------------------
+!BOC
+!
+! !LOCAL VARIABLES:
+!
+      CHARACTER(LEN=255)           :: MSG, LOC
+      INTEGER                      :: STAT
+
+      LOC = 'HCO_SetExtDataPointer_2S_NUOPC (HCOI_NUOPC_MOD.F90)'
+
+      IF ( ExtDat%DoUse .AND. ASSOCIATED(DataPtr) ) THEN
+         ! Remap the 1D CDEPS pointer to the 2D HEMCO array
+         ExtDat%Arr%Val(1:NX, 1:NY) => DataPtr(1:NX*NY)
+      ENDIF
+
+      RC = HCO_SUCCESS
+
+      END SUBROUTINE HCO_SetExtDataPointer_2S_NUOPC
+!EOC
+
 #endif
 END MODULE HCOI_NUOPC_MOD

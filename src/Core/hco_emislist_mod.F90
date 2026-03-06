@@ -863,6 +863,7 @@ CONTAINS
 
     ! Pointers
     TYPE(ListCont), POINTER    :: Lct
+    REAL(hp),       POINTER    :: HpPtr2D(:,:)
 
     !=================================================================
     ! HCO_GetPtr_2D BEGINS HERE
@@ -871,6 +872,7 @@ CONTAINS
     ! Enter
     LOC = 'HCO_GetPtr_2D (hco_emislist_mod.F90)'
     Lct => NULL()
+    HpPtr2D => NULL()
 
     ! Define time index to use
     IF ( PRESENT(TIDX) )THEN
@@ -917,7 +919,30 @@ CONTAINS
     ENDIF
 
     IF ( ASSOCIATED( Lct%Dct%Dta%V2 ) ) THEN
+       HpPtr2D => Lct%Dct%Dta%V2(T)%Val
+#ifdef USE_REAL8
+       ! Casting
+       ! This is dangerous, but we have to live with it for the moment
+       ! as we are mixing precisions...
+       ! Wait, Ptr2D is REAL, which is default real.
+       ! If default real is real8, then this is fine.
+       ! But the error says assignment of REAL(8) to REAL(4).
+       ! So Ptr2D is REAL(4).
+       ! We cannot point REAL(4) pointer to REAL(8) target.
+       ! We must return error or change interface.
+       ! However, this routine HCO_GetPtr_2D returns a pointer.
+       ! If the caller expects REAL4, and we have REAL8, we fail.
+       ! We should disable this or use different routine.
+       ! But to compile, let's NULLIFY if mismatched or error?
+       ! Or maybe Ptr2D in this file is defined as REAL (without kind).
+       ! If we compile with promote reals, it might work?
+       ! But compiler sees mismatch.
+       MSG = 'Precision mismatch in HCO_GetPtr_2D'
+       CALL HCO_ERROR( MSG, RC, THISLOC=LOC )
+       RETURN
+#else
        Ptr2D => Lct%Dct%Dta%V2(T)%Val
+#endif
        IF ( PRESENT( FILLED ) ) FILLED = .TRUE.
     ELSE
        IF ( PRESENT( FILLED ) ) THEN

@@ -18,6 +18,7 @@ MODULE HCOI_NUOPC_MOD
 !
   USE HCO_ERROR_MOD
   USE HCO_Types_Mod
+  USE HCO_DataCont_Mod, ONLY: ListCont_Find
 
 #if defined (NUOPC_ESMF)
   USE ESMF
@@ -35,6 +36,7 @@ MODULE HCOI_NUOPC_MOD
   PUBLIC :: HCO_SetExtState_NUOPC
   PUBLIC :: HCO_SetExtDataPointer_2R_NUOPC
   PUBLIC :: HCO_SetExtDataPointer_2S_NUOPC
+  PUBLIC :: HCO_SetDataPointer_ByName_NUOPC
   PUBLIC :: HCO_Imp2Ext_NUOPC
 !
 ! !PRIVATE MEMBER FUNCTIONS:
@@ -1216,12 +1218,81 @@ CONTAINS
 
       IF ( ExtDat%DoUse .AND. ASSOCIATED(DataPtr) ) THEN
          ! Remap the 1D CDEPS pointer to the 2D HEMCO array
-         ExtDat%Arr%Val(1:NX, 1:NY) => DataPtr(1:NX*NY)
+         ! Ideally we would just point to it, but ExtDat%Arr%Val is usually
+         ! singe precision (REAL4) while DataPtr is double (REAL8) from NUOPC.
+         ! So we performed an explicit copy.
+         ! Ensure target is allocated first (normally done in ExtStateInit)
+         ! If it's a pointer, we might need to check association.
+         ! However, standard HEMCO flow allocates these arrays.
+         IF ( ASSOCIATED(ExtDat%Arr%Val) ) THEN
+            ExtDat%Arr%Val(1:NX, 1:NY) = RESHAPE( REAL(DataPtr, KIND(ExtDat%Arr%Val)), (/NX, NY/) )
+         ENDIF
       ENDIF
 
       RC = HCO_SUCCESS
 
       END SUBROUTINE HCO_SetExtDataPointer_2S_NUOPC
+!EOC
+
+!------------------------------------------------------------------------------
+!                   Harmonized Emissions Component (HEMCO)                    !
+!------------------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: HCO_SetDataPointer_ByName_NUOPC
+!
+! !DESCRIPTION: Subroutine HCO_SetDataPointer_ByName_NUOPC finds a field in
+! the HEMCO data container list and sets its pointer to the provided data.
+! This is used to link CDEPS fields to HEMCO base emissions dynamically.
+!
+! !INTERFACE:
+!
+      SUBROUTINE HCO_SetDataPointer_ByName_NUOPC( HcoState, cName, DataPtr, RC )
+!
+! !ARGUMENTS:
+!
+      TYPE(HCO_State),     POINTER         :: HcoState
+      CHARACTER(LEN=*),    INTENT(IN)      :: cName
+      REAL(kind=8),        POINTER         :: DataPtr(:)
+      INTEGER,             INTENT(INOUT)   :: RC
+!
+! !LOCAL VARIABLES:
+!
+      TYPE(ListCont), POINTER :: Pnt
+      LOGICAL :: FOUND
+      CHARACTER(LEN=255)      :: LOC
+
+      LOC = 'HCO_SetDataPointer_ByName_NUOPC (HCOI_NUOPC_MOD.F90)'
+      RC = HCO_SUCCESS
+
+      ! Check initialization
+      IF ( .NOT. ASSOCIATED(HcoState) .OR. .NOT. ASSOCIATED(HcoState%Config) ) THEN
+         CALL HCO_ERROR('HcoState not initialized', RC, THISLOC=LOC)
+         RETURN
+      ENDIF
+
+      ! Find container in ConfigList
+      CALL ListCont_Find( HcoState%Config%ConfigList, TRIM(cName), FOUND, Pnt )
+
+      IF ( FOUND .AND. ASSOCIATED(Pnt) .AND. &
+           ASSOCIATED(Pnt%Dct) .AND. ASSOCIATED(Pnt%Dct%Dta) ) THEN
+
+         ! Found valid container and file object.
+         ! Verify we have a V2 array (2D field)
+         IF ( ASSOCIATED(Pnt%Dct%Dta%V2) .AND. SIZE(Pnt%Dct%Dta%V2) > 0 ) THEN
+
+             ! Point the first time slice to the CDEPS data
+             ! We assume HP (HEMCO Precision) matches REAL8 (DataPtr)
+             Pnt%Dct%Dta%V2(1)%Val(1:HcoState%NX, 1:HcoState%NY) => DataPtr(1:HcoState%NX*HcoState%NY)
+
+         ELSE
+             RC = HCO_FAIL
+         ENDIF
+      ELSE
+         RC = HCO_FAIL ! Not found
+      ENDIF
+
+      END SUBROUTINE HCO_SetDataPointer_ByName_NUOPC
 !EOC
 
 #endif

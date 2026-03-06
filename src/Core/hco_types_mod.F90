@@ -351,7 +351,7 @@ MODULE HCO_TYPES_MOD
      INTEGER                     :: UpdtFlag  ! update flag
      LOGICAL                     :: ncRead    ! read from source?
      TYPE(Arr3D_SP),     POINTER :: V3(:)     ! vector of 3D fields
-     TYPE(Arr2D_SP),     POINTER :: V2(:)     ! vector of 2D fields
+     TYPE(Arr2D_Hp),     POINTER :: V2(:)     ! vector of 2D fields
      TYPE(TimeIdx),      POINTER :: tIDx      ! for time slice indexing
      CHARACTER(LEN= 31)          :: OrigUnit  ! original data units
      CHARACTER(LEN= 63)          :: ArbDimName! name of additional dimension

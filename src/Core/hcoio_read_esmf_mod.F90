@@ -22,16 +22,16 @@ MODULE HCOIO_Read_Mod
 !
 ! !USES:
 !
-  USE HCO_Types_Mod
-  USE HCO_Error_Mod
-  USE HCO_State_Mod,       ONLY : Hco_State
+    USE HCO_Types_Mod
+    USE HCO_Error_Mod
+    USE HCO_State_Mod,       ONLY : Hco_State
 
-  IMPLICIT NONE
-  PRIVATE
+    IMPLICIT NONE
+    PRIVATE
 !
 ! !PUBLIC MEMBER FUNCTIONS:
 !
-  PUBLIC  :: HCOIO_Read
+    PUBLIC  :: HCOIO_Read
   PUBLIC  :: HCOIO_CloseAll
 !
 ! !REVISION HISTORY:
@@ -90,8 +90,8 @@ CONTAINS
     INTEGER                    :: II, JJ, LL, TT
     INTEGER                    :: I, J, L, T
     INTEGER                    :: STAT, lstat
-    REAL,             POINTER  :: Ptr3D(:,:,:)
-    REAL,             POINTER  :: Ptr2D(:,:)
+    REAL(hp),         POINTER  :: Ptr3D(:,:,:)
+    REAL(hp),         POINTER  :: Ptr2D(:,:)
     TYPE(ESMF_State), POINTER  :: IMPORT
     TYPE(ESMF_Field)           :: Field
     CHARACTER(LEN=255)         :: MSG
@@ -157,7 +157,8 @@ CONTAINS
 
              ! Pointer to data. HEMCO expects data to have surface level at
              ! index 1 ('up').
-             Lct%Dct%Dta%V3(1)%Val => Ptr3D(:,:,LL:1:-1)
+             Lct%Dct%Dta%V3(1)%Val(1:II, 1:JJ, 1:LL) = Ptr3D(1:II,1:JJ,LL:1:-1)
+             !Lct%Dct%Dta%V3(1)%Val => Ptr3D(:,:,LL:1:-1)
 
              ! Verbose
              IF ( HcoState%Config%doVerbose .AND. HcoState%amIRoot ) THEN
@@ -204,7 +205,8 @@ CONTAINS
              ENDIF
 
              ! Pointer to data
-             Lct%Dct%Dta%V2(1)%Val => Ptr2D
+             !Lct%Dct%Dta%V2(1)%Val => Ptr2D
+             Lct%Dct%Dta%V2(1)%Val(1:II, 1:JJ) = Ptr2D(1:II,1:JJ)
           ELSE
              MSG = 'Cannot get 2D pointer: ' // TRIM(Lct%Dct%Dta%ncFile)
              CALL HCO_ERROR( MSG, RC )

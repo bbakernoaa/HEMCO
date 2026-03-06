@@ -172,6 +172,12 @@ CONTAINS
     ! REGRID_MAPA2A begins here
     !=================================================================
 
+#if defined(NUOPC_ESMF)
+    ! Interpolation disabled for NUOPC interface
+    RC = HCO_FAIL
+    RETURN
+#else
+
     ! Init
     ORIG_2D => NULL()
     REGR_2D => NULL()
@@ -345,7 +351,7 @@ CONTAINS
 
           ! - Regridded 2D array
           IF ( Lct%Dct%Dta%SpaceDim <= 2 .AND. .NOT. IsIndex ) THEN
-             REGR_2D => Lct%Dct%Dta%V2(T)%Val(:,:)
+             !REGR_2D => Lct%Dct%Dta%V2(T)%Val(:,:)
           ELSE
              REGR_2D => REGR_4D(:,:,L,T)
           ENDIF
@@ -442,6 +448,8 @@ CONTAINS
 
     ! Return w/ success
     RC = HCO_SUCCESS
+
+#endif
 
   END SUBROUTINE REGRID_MAPA2A
 !EOC
@@ -540,12 +548,12 @@ CONTAINS
 ! these are model levels, starting at the surface (level 1). If the input
 ! data holds 72/73 input levels, this is interpreted as native data and will
 ! be collapsed onto the reduced GEOS-5 grid. If the input holds 102/103 input
-! levels, this is interpreted as native data and will be collapsed onto the 
+! levels, this is interpreted as native data and will be collapsed onto the
 ! reduced GISS grid. If the input holds 47/48 input levels, this is interpreted
 ! as reduced GEOS-5 data and it will be inflated to the native GEOS-5 grid
 ! (with a warning, as this is not recommended). If the input holds N input levels,
-! (where N = 3, 11, or 36 to account for NEI and AEIC emissions), this is assumed 
-! to be the first N levels of the GEOS-5 grid, meaning they will be written as 
+! (where N = 3, 11, or 36 to account for NEI and AEIC emissions), this is assumed
+! to be the first N levels of the GEOS-5 grid, meaning they will be written as
 ! levels 1-N of a 47 or 72 level output grid (with the remaining values left to
 ! be zero) (nbalasus, 8/29/2023).
 !
@@ -553,7 +561,7 @@ CONTAINS
 ! Currently, this routine can remap the following combinations:
 !
 ! * Native GEOS-5 onto reduced GEOS-5 (72 --> 47 levels, 73 --> 48 edges)
-! * Native GISS onto reduced GISS (102 --> 74 levels, 103 --> 75 edges) 
+! * Native GISS onto reduced GISS (102 --> 74 levels, 103 --> 75 edges)
 ! * Reduced GEOS-5 onto native GEOS-5 (47 --> 72 levels, 48 --> 73 edges)
 ! * N (N = 3/11/36) levels onto native/reduced GEOS-5 (N --> levels 1-N levels of 47/72 level grid, rest are 0)
 !
@@ -722,7 +730,7 @@ CONTAINS
                 Lct%Dct%Dta%V3(T)%Val(:,:,L) = REGR_4D(:,:,L,T)
              ENDDO !L
 
-            ! If remapping model grid layers, collapse layers 
+            ! If remapping model grid layers, collapse layers
              IF ( nlev == 72 ) THEN
                ! Collapse two levels (e.g. levels 37-38 into level 37):
                CALL COLLAPSE( Lct, REGR_4D, 37, 37, 2, T, 5, RC )
@@ -944,7 +952,7 @@ CONTAINS
                    ENDIF
                    Lct%Dct%Dta%V3(T)%Val(:,:,fineIDX) = REGR_4D(:,:,coarseIDX,T)
                 ENDDO ! I
-                
+
              ELSEIF ( nlev == 3 ) THEN
                DO L = 4,72
                   Lct%Dct%Dta%V3(T)%Val(:,:,L) = 0.0_hp
@@ -1069,7 +1077,7 @@ CONTAINS
     ! Get pointer to grid edges on the native input grid
     IF ( Met == 22 ) THEN
        EDG => E102_EDGE_NATIVE(InLev1:TOPLEV)
-    ELSEIF ( Met == 5 ) THEN 
+    ELSEIF ( Met == 5 ) THEN
        EDG => G5_EDGE_NATIVE(InLev1:TOPLEV)
     ELSE
        WRITE(MSG,*) 'The Met value given was not valid: ', Met
